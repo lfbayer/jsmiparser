@@ -15,9 +15,11 @@
  */
 package org.jsmiparser.smi;
 
+import org.jsmiparser.util.token.IdToken;
+
 import java.util.List;
 
-public class SmiModuleIdentity {
+public class SmiModuleIdentity extends SmiOidMacro {
     private final String m_lastUpdated;
     private final String m_organization;
     private final String m_contactInfo;
@@ -25,7 +27,8 @@ public class SmiModuleIdentity {
 
     private final List<SmiModuleRevision> m_revisions;
 
-    public SmiModuleIdentity(String lastUpdated, String organization, String contactInfo, String description, List<SmiModuleRevision> revisions) {
+    public SmiModuleIdentity(IdToken id, SmiModule module, String lastUpdated, String organization, String contactInfo, String description, List<SmiModuleRevision> revisions) {
+        super(id, module);
         m_lastUpdated = lastUpdated;
         m_organization = organization;
         m_contactInfo = contactInfo;

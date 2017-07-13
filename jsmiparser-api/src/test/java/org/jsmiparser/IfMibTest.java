@@ -23,6 +23,7 @@ import org.jsmiparser.smi.SmiModuleIdentity;
 import org.jsmiparser.smi.SmiModuleRevision;
 import org.jsmiparser.smi.SmiNotificationType;
 import org.jsmiparser.smi.SmiOidNode;
+import org.jsmiparser.smi.SmiOidValue;
 import org.jsmiparser.smi.SmiPrimitiveType;
 import org.jsmiparser.smi.SmiRow;
 import org.jsmiparser.smi.SmiTable;
@@ -267,9 +268,23 @@ public class IfMibTest extends AbstractMibTestCase {
         assertNotNull(ifMib);
 
         SmiModuleIdentity moduleIdentity = ifMib.getModuleIdentity();
+        assertEquals("ifMIB", moduleIdentity.getId());
+        assertEquals("The MIB module to describe generic objects for network\n"
+                + "            interface sub-layers.  This MIB is an updated version of\n"
+                + "            MIB-II's ifTable, and incorporates the extensions defined in\n"
+                + "            RFC 1229.", moduleIdentity.getDescription());
+
         assertNotNull("ModuleIdentity must not be null", moduleIdentity);
         assertEquals("IETF Interfaces MIB Working Group", moduleIdentity.getOrganization());
         assertEquals("200006140000Z", moduleIdentity.getLastUpdated());
+        assertEquals("   Keith McCloghrie\n"
+                + "                Cisco Systems, Inc.\n"
+                + "                170 West Tasman Drive\n"
+                + "                San Jose, CA  95134-1706\n"
+                + "                US\n"
+                + "\n"
+                + "                408-526-5260\n"
+                + "                kzm@cisco.com", moduleIdentity.getContactInfo());
 
         List<SmiModuleRevision> revisions = moduleIdentity.getRevisions();
         assertEquals(3, revisions.size());
@@ -277,5 +292,11 @@ public class IfMibTest extends AbstractMibTestCase {
         SmiModuleRevision lastRevision = revisions.get(2);
         assertEquals("199311082155Z", lastRevision.getRevision());
         assertEquals("Initial revision, published as part of RFC 1573.", lastRevision.getDescription());
+
+        assertEquals("1.3.6.1.2.1", moduleIdentity.getNode().getParent().getOidStr());
+
+        SmiOidNode ifMibByOid = getMib().findByOid(1, 3, 6, 1, 2, 1, 31);
+        assertNotNull(ifMibByOid);
+        assertTrue(ifMibByOid.getSingleValue() == moduleIdentity);
     }
 }

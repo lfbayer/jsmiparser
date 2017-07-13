@@ -636,7 +636,7 @@ oid_macro_value_assignment[IdToken idToken] returns [SmiOidMacro v = null]
 }
 :
 	(v=objecttype_macro[idToken]
-	| moduleidentity_macro
+	| v=moduleidentity_macro[idToken]
 	| objectidentity_macro
 	| v=notificationtype_macro[idToken]
 	| objectgroup_macro
@@ -808,7 +808,7 @@ objecttype_macro_augments[IdToken idToken, SmiType type] returns [SmiRow row = m
 
 
 
-moduleidentity_macro
+moduleidentity_macro[IdToken idToken] returns [SmiModuleIdentity identity = null]
 {
     List<SmiModuleRevision> revisions = new ArrayList<SmiModuleRevision>();
 }
@@ -820,7 +820,7 @@ moduleidentity_macro
 	"DESCRIPTION"  description:C_STRING
 	(moduleidentity_macro_revision[revisions])*
 	{
-	    m_mp.setModuleIdentity(lastUpdated, organization, contactInfo, description, revisions);
+	    identity = m_mp.createModuleIdentity(idToken, lastUpdated, organization, contactInfo, description, revisions);
 	}
 ;
 

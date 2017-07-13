@@ -368,8 +368,10 @@ public class ModuleParser {
         return new ScopedId(m_module, moduleToken != null ? idt(moduleToken) : null, idt(symbolToken));
     }
 
-    public void setModuleIdentity(Token lastUpdated, Token organization, Token contactInfo, Token description, List<SmiModuleRevision> revisions) {
-        m_module.setModuleIdentity(new SmiModuleIdentity(getOptCStr(lastUpdated), getOptCStr(organization), getOptCStr(contactInfo), getOptCStr(description), revisions));
+    public SmiModuleIdentity createModuleIdentity(IdToken idToken, Token lastUpdated, Token organization, Token contactInfo, Token description, List<SmiModuleRevision> revisions) {
+        SmiModuleIdentity identity = new SmiModuleIdentity(idToken, m_module, getOptCStr(lastUpdated), getOptCStr(organization), getOptCStr(contactInfo), getOptCStr(description), revisions);
+        m_module.setModuleIdentity(identity);
+        return identity;
     }
 
     public SmiModuleRevision createModuleRevision(Token revision, Token description) {
