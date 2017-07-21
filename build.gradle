@@ -41,7 +41,7 @@ allprojects {
   apply plugin: 'maven'
   apply plugin: 'signing'
 
-  group = 'org.jsmiparser'
+  group = 'com.lbayer'
 
   // set the to-be-released version with -Pversion=
   if (version == DEFAULT_VERSION)
@@ -131,8 +131,14 @@ subprojects { subproject ->
           authentication(userName: ossrhUsername, password: ossrhPassword)
         }
 
+        snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+          authentication(userName: ossrhUsername, password: ossrhPassword)
+        }
+
         pom {
           version project.version
+          artifactId = subproject.name
+          groupId = project.group
         }
 
         pom.project {

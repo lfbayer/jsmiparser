@@ -16,6 +16,7 @@
 
 package org.jsmiparser.smi;
 
+import org.jsmiparser.phase.xref.XRefFallbackResolver;
 import org.jsmiparser.phase.xref.XRefProblemReporter;
 import org.jsmiparser.util.token.IdToken;
 import org.jsmiparser.util.token.IntegerToken;
@@ -51,10 +52,10 @@ public class SmiTrapType extends SmiValue implements Notification {
 	    return getId();
 	}
 
-    public void resolveReferences(XRefProblemReporter reporter) {
-    	m_enterpriseOid = getModule().resolveReference(m_enterpriseIdToken, SmiOidValue.class, reporter);
+    public void resolveReferences(XRefProblemReporter reporter, XRefFallbackResolver resolver) {
+    	m_enterpriseOid = getModule().resolveReference(m_enterpriseIdToken, SmiOidValue.class, reporter, resolver);
         for (IdToken variableToken : m_variableTokens) {
-            SmiVariable variable = getModule().resolveReference(variableToken, SmiVariable.class, reporter);
+            SmiVariable variable = getModule().resolveReference(variableToken, SmiVariable.class, reporter, resolver);
             if (variable != null) {
                 m_variables.add(variable);
             }

@@ -164,6 +164,10 @@ public class IfMibTest extends AbstractMibTestCase {
         System.out.println(mib.getVariables().size() + mib.getTables().size() + mib.getRows().size());
 
         checkOidTree(mib);
+
+        SmiType ifEntryType = ifMib.findType("IfEntry");
+        assertEquals(ifEntryType, ifTable.getType().getElementType());
+        assertEquals(ifEntryType, ifEntry.getType());
     }
 
     public void testFindByOidPrefix() {

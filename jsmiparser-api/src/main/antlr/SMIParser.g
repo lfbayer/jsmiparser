@@ -171,6 +171,7 @@ WS
 	( ' '
 	| '\t'
 	| '\f'
+	| '\u0000'
 	|	( options {generateAmbigWarnings=false;}
 		:
 			"\r\n"	{ newline(); }// DOS
@@ -232,8 +233,24 @@ SL_COMMENT
 }
 ;
 
+UTF8_BYTE_ORDER_MARK
+:
+    '\u00ef' '\u00bb' '\u00bf'
+{
+    $setType(Token.SKIP);
+}
+;
 
-NUMBER	:	('0'..'9')+ ;
+SUBSTITUE_CTRL_CHAR
+:
+    '\u001A'
+{
+    $setType(Token.SKIP);
+}
+;
+
+protected
+NUMBER : ('0'..'9')+ ;
 
 // TODO in principle, underscores are not allowed in UPPER/LOWER identifiers
 UPPER	
@@ -250,6 +267,17 @@ options {testLiterals = false;}
 	:	( 'a'..'z' | 'A'..'Z' | '-' | '_' | '0'..'9' ))*
 ;
 
+protected
+NUMBER_NAME : NUMBER LOWER ;
+
+NUMBER_OR_NUMBER_NAME:
+    { $setType(NUMBER); }
+    NUMBER
+    (
+        LOWER
+        { $setType(NUMBER_NAME); }
+    )?
+;
 
 protected
 BDIG		: ('0'|'1') ;
@@ -386,11 +414,10 @@ symbols_from_module
 
 symbol_list returns [List<IdToken> result = m_mp.makeIdTokenList()]
 {
-	IdToken s1 = null, s2 = null;
+	IdToken s = null;
 }
 :
-	s1=symbol		{ result.add(s1); }
-	(COMMA s2=symbol	{ result.add(s2); } )*
+    (s=symbol (COMMA)? { result.add(s); } )+
 ;
 
 symbol returns [IdToken result = null]
@@ -432,6 +459,7 @@ assignment returns [SmiSymbol s = null]
     (
 	u:UPPER ASSIGN_OP s=type_assignment[m_mp.idt(u)]
 	| l:LOWER s=value_assignment[m_mp.idt(l)]
+	| a:UPPER s=value_assignment[m_mp.idt(a)]
 	| mn=macroName "MACRO" ASSIGN_OP BEGIN_KW ( ~(END_KW) )* END_KW    { s = m_mp.createMacro(mn); }
 	)
 	{
@@ -540,8 +568,7 @@ sequence_type[IdToken idToken] returns [SmiType t = null]
 :
 	SEQUENCE_KW	{ t = m_mp.createSequenceType(idToken); }
 	L_BRACE
-		sequence_field[t]
-		(COMMA sequence_field[t])*
+		(sequence_field[t] (COMMA)?)+
 	R_BRACE
 ;
 
@@ -696,7 +723,7 @@ oid_sequence [IdToken idToken] returns [OidComponent last = null]
 oid_component[OidComponent parent] returns [OidComponent oc = null]
 :
 	nt1:NUMBER { oc = m_mp.createOidComponent(parent, null, nt1); }
-	| (lt:LOWER (L_PAREN nt2:NUMBER R_PAREN)?) { oc = m_mp.createOidComponent(parent, lt, nt2); }
+	| ((nn:NUMBER_NAME | lt:LOWER) (L_PAREN nt2:NUMBER R_PAREN)?) { oc = m_mp.createOidComponent(parent, nn == null ? lt : nn, nt2); }
 ;
 
 bits_value returns [List<IdToken> result = new ArrayList<IdToken>()]
@@ -1022,8 +1049,7 @@ traptype_macro[IdToken idToken] returns [SmiTrapType tt = null]
 named_number_list returns [List<SmiNamedNumber> l = new ArrayList<SmiNamedNumber>()]
 :
 	L_BRACE
-		named_number[l]
-		(COMMA named_number[l])*
+		(named_number[l] (COMMA)?)+
 	R_BRACE
 ;
 
@@ -1033,7 +1059,7 @@ named_number[List<SmiNamedNumber> l]
 	BigIntegerToken bit = null;
 }
 :
-	it=lower L_PAREN bit=big_integer_token R_PAREN
+	(it=named_number_name L_PAREN bit=big_integer_token R_PAREN)
 {
 	l.add(new SmiNamedNumber(it, bit));
 }
@@ -1072,5 +1098,13 @@ lower returns [IdToken result = null]
 	l:LOWER
 {
 	result = m_mp.idt(l);
+}
+;
+
+named_number_name returns [IdToken result = null]
+:
+	(u:UPPER | l:LOWER | nn:NUMBER_NAME | n:NUMBER)
+{
+	result = m_mp.idt(u, l, nn, n);
 }
 ;

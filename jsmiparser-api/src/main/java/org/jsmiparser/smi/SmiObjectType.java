@@ -16,6 +16,7 @@
 
 package org.jsmiparser.smi;
 
+import org.jsmiparser.phase.xref.XRefFallbackResolver;
 import org.jsmiparser.phase.xref.XRefProblemReporter;
 import org.jsmiparser.util.token.IdToken;
 
@@ -41,8 +42,10 @@ public class SmiObjectType extends SmiOidMacro {
         m_type = type;
     }
 
-    public void resolveReferences(XRefProblemReporter reporter) {
-        m_type = m_type.resolveThis(reporter, null);
+    public void resolveReferences(XRefProblemReporter reporter, XRefFallbackResolver resolver) {
+        m_type = m_type.resolveThis(reporter, null, resolver);
+
+        m_type.resolveReferences(reporter, resolver);
 
         if (m_accessToken != null) {
             m_accessV1 = ObjectTypeAccessV1.find(m_accessToken.getId(), false);

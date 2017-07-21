@@ -15,6 +15,7 @@
  */
 package org.jsmiparser.smi;
 
+import org.jsmiparser.phase.xref.XRefFallbackResolver;
 import org.jsmiparser.phase.xref.XRefProblemReporter;
 
 /**
@@ -49,8 +50,8 @@ public class SmiIndex {
         return m_row.getTable() != getColumn().getTable();
     }
 
-    public void resolveReferences(XRefProblemReporter reporter) {
-        m_scopedId.resolveReferences(reporter);
+    public void resolveReferences(XRefProblemReporter reporter, XRefFallbackResolver resolver) {
+        m_scopedId.resolveReferences(reporter, resolver);
     }
 
 }

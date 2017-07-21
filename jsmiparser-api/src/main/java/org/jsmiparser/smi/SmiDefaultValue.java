@@ -1,5 +1,6 @@
 package org.jsmiparser.smi;
 
+import org.jsmiparser.phase.xref.XRefFallbackResolver;
 import org.jsmiparser.phase.xref.XRefProblemReporter;
 import org.jsmiparser.util.token.BigIntegerToken;
 import org.jsmiparser.util.token.BinaryStringToken;
@@ -151,11 +152,13 @@ public class SmiDefaultValue {
         return m_isNullValue;
     }
 
-    public void resolveReferences(XRefProblemReporter reporter) {
+    public void resolveReferences(XRefProblemReporter reporter, XRefFallbackResolver resolver) {
+         m_variable.resolveReferences(reporter, resolver);
+
         if (m_bitsIdTokenList != null) {
-            resolveBits(reporter);
+            resolveBits(reporter, resolver);
         } else if (m_lastOidComponent != null) {
-            m_oidNode = resolveOids(reporter);
+            m_oidNode = resolveOids(reporter, resolver);
         } else if (m_scopedId != null) {
             if (m_scopedId.getModuleToken() != null) {
                 m_log.debug("Not yet implemented: " + m_scopedId.getModuleToken());
@@ -163,7 +166,7 @@ public class SmiDefaultValue {
                 if (m_variable.getEnumValues() != null) {
                     m_enumValue = m_variable.resolveEnumConstant(m_scopedId.getSymbolToken(), reporter);
                 } else {
-                    SmiSymbol symbol = m_variable.getModule().resolveReference(m_scopedId.getSymbolToken(), reporter);
+                    SmiSymbol symbol = m_variable.getModule().resolveReference(m_scopedId.getSymbolToken(), reporter, resolver);
                     if (symbol != null) {
                         if (symbol instanceof SmiOidValue && m_variable.getPrimitiveType() == SmiPrimitiveType.OBJECT_IDENTIFIER) {
                             m_oidValue = (SmiOidValue) symbol;
@@ -180,13 +183,13 @@ public class SmiDefaultValue {
         }
     }
 
-    private SmiOidNode resolveOids(XRefProblemReporter reporter) {
+    private SmiOidNode resolveOids(XRefProblemReporter reporter, XRefFallbackResolver resolver) {
         // TODO
         // reporter.reportOidDefaultValueMustBeSingleIdentifier(t);
-        return m_lastOidComponent.resolveNode(m_module, reporter);
+        return m_lastOidComponent.resolveNode(m_module, reporter, resolver);
     }
 
-    private void resolveBits(XRefProblemReporter reporter) {
+    private void resolveBits(XRefProblemReporter reporter, XRefFallbackResolver resolver) {
         if (m_variable.getBitFields() != null) {
             m_bitsValue = new ArrayList<SmiNamedNumber>();
             for (IdToken idToken : m_bitsIdTokenList) {

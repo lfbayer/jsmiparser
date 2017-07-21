@@ -16,6 +16,7 @@
 
 package org.jsmiparser.smi;
 
+import org.jsmiparser.phase.xref.XRefFallbackResolver;
 import org.jsmiparser.phase.xref.XRefProblemReporter;
 import org.jsmiparser.util.token.IdToken;
 
@@ -40,9 +41,9 @@ public class SmiNotificationType extends SmiOidMacro implements Notification {
         m_reference = reference;
     }
 
-    public void resolveReferences(XRefProblemReporter reporter) {
+    public void resolveReferences(XRefProblemReporter reporter, XRefFallbackResolver resolver) {
         for (IdToken objectToken : m_objectTokens) {
-            SmiVariable variable = getModule().resolveReference(objectToken, SmiVariable.class, reporter);
+            SmiVariable variable = getModule().resolveReference(objectToken, SmiVariable.class, reporter, resolver);
             if (variable != null) {
                 m_objects.add(variable);
             }

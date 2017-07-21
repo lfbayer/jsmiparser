@@ -33,6 +33,12 @@ public interface XRefProblemReporter {
     @ProblemMethod(message = "Cannot find symbol %s")
     void reportCannotFindSymbol(IdToken idToken);
 
+    @ProblemMethod(message = "Duplicate module ID %s")
+    void reportDuplicateModuleId(IdToken moduleToken);
+
+    @ProblemMethod(message = "Cycle detected at symbol %s")
+    void reportCycle(IdToken idToken);
+
     @ProblemMethod(message = "Found symbol %s but expected a %s instead of %s")
     void reportFoundSymbolButWrongType(IdToken idToken, Class<? extends SmiSymbol> expectedClass, Class<? extends SmiSymbol> actualClass);
 

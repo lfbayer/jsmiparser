@@ -17,16 +17,20 @@ package org.jsmiparser.smi;
 
 import org.jsmiparser.phase.xref.XRefProblemReporter;
 import org.jsmiparser.util.location.Location;
+import org.jsmiparser.util.multimap.GenMultiMap;
 import org.jsmiparser.util.token.IdToken;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 public class SmiMib {
 
+    private GenMultiMap<String, SmiModule> m_allModuleMap = GenMultiMap.hashMap();
     private Map<String, SmiModule> m_moduleMap = new LinkedHashMap<String, SmiModule>();
     private final SmiOptions m_options;
     private SmiCodeNamingStrategy m_codeNamingStrategy;
@@ -55,7 +59,6 @@ public class SmiMib {
         m_codeNamingStrategy = codeNamingStrategy;
 
         SmiModule internalMib = buildInternalMib();
-        m_moduleMap.put(internalMib.getId(), internalMib);
     }
 
     private SmiModule buildInternalMib() {
@@ -97,15 +100,7 @@ public class SmiMib {
     }
 
     public SmiModule createModule(IdToken idToken) {
-        SmiModule oldModule = m_moduleMap.get(idToken.getId());
-        if (oldModule != null) {
-            // TODO error handling
-            // should do this in the XRefPhase
-            throw new IllegalStateException("Duplicate module: " + oldModule.getIdToken() + " is already defined when adding: " + idToken);
-        }
-        SmiModule module = new SmiModule(this, idToken);
-        m_moduleMap.put(module.getId(), module);
-        return module;
+        return new SmiModule(this, idToken);
     }
 
     public void determineInheritanceRelations() {
@@ -129,11 +124,7 @@ public class SmiMib {
     }
 
     void addModule(String id, SmiModule module) {
-        SmiModule oldModule = m_moduleMap.get(id);
-        if (oldModule != null) {
-            throw new IllegalArgumentException("Mib already contains a module: " + oldModule);
-        }
-        m_moduleMap.put(id, module);
+        m_allModuleMap.put(id, module);
     }
 
     public void fillTables() {
@@ -281,6 +272,20 @@ public class SmiMib {
         }
     }
 
+    public void resolveModules(XRefProblemReporter reporter) {
+        Set<Map.Entry<String, List<SmiModule>>> entries = m_allModuleMap.entrySet();
+        for (Map.Entry<String, List<SmiModule>> entry : entries) {
+            List<SmiModule> modules = entry.getValue();
+            if (modules.size() > 1) {
+                for (SmiModule module : modules) {
+                    reporter.reportDuplicateModuleId(module.getIdToken());
+                }
+            }
+
+            m_moduleMap.put(entry.getKey(), modules.get(0));
+        }
+    }
+
     public SmiModule resolveModule(IdToken moduleToken, XRefProblemReporter reporter) {
         SmiModule result = m_moduleMap.get(moduleToken.getId());
         if (result == null) {
@@ -288,5 +293,4 @@ public class SmiMib {
         }
         return result;
     }
-
 }

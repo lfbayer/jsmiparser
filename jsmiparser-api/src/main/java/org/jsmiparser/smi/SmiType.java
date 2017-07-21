@@ -15,6 +15,7 @@
  */
 package org.jsmiparser.smi;
 
+import org.jsmiparser.phase.xref.XRefFallbackResolver;
 import org.jsmiparser.phase.xref.XRefProblemReporter;
 import org.jsmiparser.util.token.IdToken;
 
@@ -260,27 +261,27 @@ public class SmiType extends SmiSymbol {
     }
 
 
-    public SmiType resolveThis(XRefProblemReporter reporter, SmiType ignored) {
+    public SmiType resolveThis(XRefProblemReporter reporter, SmiType ignored, XRefFallbackResolver resolver) {
         if (m_baseType != null) {
-            m_baseType = m_baseType.resolveThis(reporter, this);
+            m_baseType = m_baseType.resolveThis(reporter, this, resolver);
         }
         return this;
     }
 
-    public void resolveReferences(XRefProblemReporter reporter) {
-        assert (getIdToken() != null);
+    public void resolveReferences(XRefProblemReporter reporter, XRefFallbackResolver resolver) {
+//        assert (getIdToken() != null);
         assert (!(this instanceof SmiReferencedType));
 
         if (m_baseType != null) {
-            m_baseType = m_baseType.resolveThis(reporter, this);
+            m_baseType = m_baseType.resolveThis(reporter, this, resolver);
         }
 
         if (m_elementTypeToken != null) {
-            m_elementType = getModule().resolveReference(m_elementTypeToken, SmiType.class, reporter);
+            m_elementType = getModule().resolveReference(m_elementTypeToken, SmiType.class, reporter, resolver);
         }
         if (m_fields != null) {
             for (SmiField field : m_fields) {
-                field.resolveReferences(reporter);
+                field.resolveReferences(reporter, resolver);
             }
         }
     }

@@ -15,6 +15,7 @@
  */
 package org.jsmiparser.smi;
 
+import org.jsmiparser.phase.xref.XRefFallbackResolver;
 import org.jsmiparser.phase.xref.XRefProblemReporter;
 import org.jsmiparser.util.location.Location;
 import org.jsmiparser.util.pair.Pair;
@@ -24,6 +25,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Set;
 
 public class SmiImports {
 
@@ -101,11 +103,46 @@ public class SmiImports {
         return m_symbolMap.get(id);
     }
 
-    public void resolveImports(XRefProblemReporter reporter) {
+    private SmiSymbol findSymbol(SmiModule module, String id) {
+        if (module == null) {
+            throw new IllegalArgumentException("module cannot be null for " + id);
+        }
+
+        SmiSymbol symbol = module.findSymbol(id);
+        if (symbol == null) {
+            Set<SmiModule> modules = module.getImportedModules();
+            for (SmiModule smiModule : modules) {
+                symbol = findSymbol(smiModule, id);
+                if (symbol != null) {
+                    break;
+                }
+            }
+        }
+
+        return symbol;
+    }
+
+    public void resolveModule(XRefProblemReporter reporter, XRefFallbackResolver resolver) {
         m_module = m_importerModule.getMib().findModule(m_moduleToken.getId());
+
+        if (m_module == null && resolver != null) {
+            m_module = resolver.findModule(m_importerModule.getMib(), m_moduleToken.getId());
+        }
+
+        if (m_module == null) {
+            reporter.reportCannotFindModule(m_moduleToken);
+        }
+    }
+
+    public void resolveImports(XRefProblemReporter reporter, XRefFallbackResolver resolver) {
         if (m_module != null) {
             for (IdToken idToken : getSymbolTokens()) {
-                SmiSymbol symbol = getModule().findSymbol(idToken.getId());
+                SmiSymbol symbol = findSymbol(getModule(), idToken.getId());
+
+                if (symbol == null && resolver != null) {
+                    symbol = resolver.findSymbol(m_importerModule.getMib(), getModule().getId(), idToken.getId());
+                }
+
                 if (symbol != null) {
                     m_symbolMap.put(idToken.getId(), symbol);
                 } else {
@@ -115,8 +152,6 @@ public class SmiImports {
         } else {
             if (m_importerModule.getMib().getOptions().isConvertV1ImportsToV2()) {
                 resolveV1Imports(reporter);
-            } else {
-                reporter.reportCannotFindModule(m_moduleToken);
             }
         }
     }

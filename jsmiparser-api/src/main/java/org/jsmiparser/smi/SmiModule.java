@@ -15,6 +15,7 @@
  */
 package org.jsmiparser.smi;
 
+import org.jsmiparser.phase.xref.XRefFallbackResolver;
 import org.jsmiparser.phase.xref.XRefProblemReporter;
 import org.jsmiparser.util.token.IdToken;
 import org.slf4j.Logger;
@@ -128,7 +129,11 @@ public class SmiModule {
     }
 
     public SmiSymbol findSymbol(String id) {
-        return m_symbolMap.get(id);
+        SmiSymbol result = m_symbolMap.get(id);
+        if (result == null) {
+            return findImportedSymbol(id);
+        }
+        return result;
     }
 
     public SmiVariable findVariable(String id) {
@@ -289,7 +294,10 @@ public class SmiModule {
     public Set<SmiModule> getImportedModules() {
         Set<SmiModule> result = new HashSet<SmiModule>();
         for (SmiImports anImport : m_imports) {
-            result.add(anImport.getModule());
+            SmiModule module = anImport.getModule();
+            if (module != null) {
+                result.add(module);
+            }
         }
         return result;
     }
@@ -337,7 +345,7 @@ public class SmiModule {
      * @param reporter If not null, the reporter will be used to reporter the not found error message.
      * @return The symbol that was found, or null.
      */
-    public SmiSymbol resolveReference(IdToken idToken, XRefProblemReporter reporter) {
+    public SmiSymbol resolveReference(IdToken idToken, XRefProblemReporter reporter, XRefFallbackResolver resolver) {
 // doesn't work anymore with hardcoded missing symbols
 //        if (!idToken.getLocation().getSource().equals(getIdToken().getLocation().getSource())) {
 //            // note this check is not entirely fool-proof in case multiple modules are located in one file
@@ -346,14 +354,15 @@ public class SmiModule {
 
         SmiSymbol result = findSymbol(idToken.getId());
         if (result == null) {
-            result = findImportedSymbol(idToken.getId());
-        }
-        if (result == null) {
             List<SmiSymbol> symbols = getMib().getSymbols().findAll(idToken.getId());
             if (symbols.size() == 1) {
                 result = symbols.get(0);
             } else if (symbols.size() > 0) {
                 result = determineBestMatch(idToken, symbols);
+            }
+
+            if (result == null && resolver != null) {
+                result = resolver.findSymbol(getMib(), idToken.getId());
             }
         }
         if (result == null && reporter != null) {
@@ -363,8 +372,8 @@ public class SmiModule {
         return result;
     }
 
-    public <T extends SmiSymbol> T resolveReference(IdToken idToken, Class<T> expectedClass, XRefProblemReporter reporter) {
-        SmiSymbol result = resolveReference(idToken, reporter);
+    public <T extends SmiSymbol> T resolveReference(IdToken idToken, Class<T> expectedClass, XRefProblemReporter reporter, XRefFallbackResolver resolver) {
+        SmiSymbol result = resolveReference(idToken, reporter, resolver);
         if (result != null) {
             if (expectedClass.isInstance(result)) {
                 return expectedClass.cast(result);
@@ -405,13 +414,18 @@ public class SmiModule {
         return null;
     }
 
+    private SmiVersion getModuleVersionForSymbol(SmiSymbol symbol) {
+        SmiVersion version = symbol.getModule().getVersion();
+        return version == null ? SmiVersion.V1 : version;
+    }
+
     private SmiSymbol determineBestMatchBasedOnSnmpVersion(List<SmiSymbol> symbols) {
         if (symbols.size() == 2) {
             SmiSymbol s0 = symbols.get(0);
             SmiSymbol s1 = symbols.get(1);
-            SmiVersion version0 = s0.getModule().getVersion();
-            SmiVersion version1 = s1.getModule().getVersion();
-            if (version0 != null && version1 != null && version0 != version1) {
+            SmiVersion version0 = getModuleVersionForSymbol(s0);
+            SmiVersion version1 = getModuleVersionForSymbol(s1);
+            if (version0 != version1) {
                 if (getVersion() == version0) {
                     return s0;
                 } else if (getVersion() == version1) {
@@ -432,9 +446,15 @@ public class SmiModule {
         return null;
     }
 
-    public void resolveImports(XRefProblemReporter reporter) {
+    public void resolveImportModules(XRefProblemReporter reporter, XRefFallbackResolver resolver) {
         for (SmiImports imports : m_imports) {
-            imports.resolveImports(reporter);
+            imports.resolveModule(reporter, resolver);
+        }
+    }
+
+    public void resolveImports(XRefProblemReporter reporter, XRefFallbackResolver resolver) {
+        for (SmiImports imports : m_imports) {
+            imports.resolveImports(reporter, resolver);
         }
         // TODO check for imports with the same id
     }

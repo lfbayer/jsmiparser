@@ -15,6 +15,7 @@
  */
 package org.jsmiparser.smi;
 
+import org.jsmiparser.phase.xref.XRefFallbackResolver;
 import org.jsmiparser.phase.xref.XRefProblemReporter;
 import org.jsmiparser.util.token.IdToken;
 
@@ -56,10 +57,10 @@ public class SmiReferencedType extends SmiType {
     }
 
     @Override
-    public SmiType resolveThis(XRefProblemReporter reporter, SmiType parentType) {
+    public SmiType resolveThis(XRefProblemReporter reporter, SmiType parentType, XRefFallbackResolver resolver) {
         SmiType result = this;
 
-        SmiType type = getModule().resolveReference(getIdToken(), SmiType.class, reporter);
+        SmiType type = getModule().resolveReference(getIdToken(), SmiType.class, reporter, resolver);
         if (type != null) {
             // TODO check compatibility
             // TODO verify

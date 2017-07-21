@@ -15,6 +15,7 @@
  */
 package org.jsmiparser.smi;
 
+import org.jsmiparser.phase.xref.XRefFallbackResolver;
 import org.jsmiparser.util.token.IdToken;
 import org.jsmiparser.phase.xref.XRefProblemReporter;
 
@@ -122,14 +123,14 @@ public class SmiRow extends SmiObjectType {
 
 
     @Override
-    public void resolveReferences(XRefProblemReporter reporter) {
-        super.resolveReferences(reporter);
+    public void resolveReferences(XRefProblemReporter reporter, XRefFallbackResolver resolver) {
+        super.resolveReferences(reporter, resolver);
         if (m_indexes != null) {
             for (SmiIndex index : m_indexes) {
-                index.resolveReferences(reporter);
+                index.resolveReferences(reporter, resolver);
             }
         } else {
-            m_augmentsId.resolveReferences(reporter);
+            m_augmentsId.resolveReferences(reporter, resolver);
             SmiRow augmentedRow = getAugments();
             if (augmentedRow != null) {
                 augmentedRow.m_childRows.add(this);

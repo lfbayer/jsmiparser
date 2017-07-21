@@ -15,6 +15,7 @@
  */
 package org.jsmiparser.smi;
 
+import org.jsmiparser.phase.xref.XRefFallbackResolver;
 import org.jsmiparser.phase.xref.XRefProblemReporter;
 import org.jsmiparser.util.token.IdToken;
 import org.jsmiparser.util.token.IntegerToken;
@@ -57,6 +58,10 @@ public class OidComponent {
         return m_valueToken;
     }
 
+    IdToken getParentId() {
+        return m_parent == null ? null : m_parent.getIdToken();
+    }
+
     private boolean isFirst() {
         return m_parent == null;
     }
@@ -65,17 +70,17 @@ public class OidComponent {
         return m_child == null;
     }
 
-    public SmiOidNode resolveNode(SmiModule module, XRefProblemReporter reporter) {
+    public SmiOidNode resolveNode(SmiModule module, XRefProblemReporter reporter, XRefFallbackResolver resolver) {
         assert (m_node == null);
         if (!m_isResolved) {
             SmiOidNode parent = null;
             if (m_parent != null) {
-                parent = m_parent.resolveNode(module, reporter);
+                parent = m_parent.resolveNode(module, reporter, resolver);
                 if (parent == null) {
                     reporter.reportCannotFindParent(m_parent.getToken());
                 }
             }
-            m_node = doResolve(module, parent, reporter);
+            m_node = doResolve(module, parent, reporter, resolver);
             if (m_node == null) {
                 if (isLast()) {
                     if (parent != null) {
@@ -96,14 +101,14 @@ public class OidComponent {
         return m_node;
     }
 
-    private SmiOidNode doResolve(SmiModule module, SmiOidNode parent, XRefProblemReporter reporter) {
+    private SmiOidNode doResolve(SmiModule module, SmiOidNode parent, XRefProblemReporter reporter, XRefFallbackResolver resolver) {
         SmiOidNode node;
         if (m_idToken != null && !isLast()) { // isLast check deals with jobmonMIB situation
-            SmiSymbol symbol = module.resolveReference(m_idToken, null);
+            SmiSymbol symbol = module.resolveReference(m_idToken, null, resolver);
             if (symbol != null) {
                 if (symbol instanceof SmiOidValue) {
                     SmiOidValue oidValue = (SmiOidValue) symbol;
-                    node = oidValue.resolveOid(reporter);
+                    node = oidValue.resolveOid(reporter, resolver);
                     if (node != null && m_valueToken != null) {
                         // TODO compare
                     }

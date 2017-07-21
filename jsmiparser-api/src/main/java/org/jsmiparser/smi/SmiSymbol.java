@@ -15,6 +15,7 @@
  */
 package org.jsmiparser.smi;
 
+import org.jsmiparser.phase.xref.XRefFallbackResolver;
 import org.jsmiparser.phase.xref.XRefProblemReporter;
 import org.jsmiparser.util.location.Location;
 import org.jsmiparser.util.token.IdToken;
@@ -122,7 +123,7 @@ public abstract class SmiSymbol implements Serializable, Comparable {
         return result;
     }
 
-    public void resolveReferences(XRefProblemReporter reporter) {
+    public void resolveReferences(XRefProblemReporter reporter, XRefFallbackResolver resolver) {
         // do nothing
     }
 

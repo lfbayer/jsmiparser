@@ -16,6 +16,7 @@
 
 package org.jsmiparser.smi;
 
+import org.jsmiparser.phase.xref.XRefFallbackResolver;
 import org.jsmiparser.phase.xref.XRefProblemReporter;
 import org.jsmiparser.util.token.IdToken;
 
@@ -56,9 +57,27 @@ public class SmiOidValue extends SmiValue {
         return m_node.getOidStr();
     }
 
-    public SmiOidNode resolveOid(XRefProblemReporter reporter) {
+
+    private int recurseCount = 0;
+    public SmiOidNode resolveOid(XRefProblemReporter reporter, XRefFallbackResolver resolver) {
+        if (recurseCount > 0) {
+            reporter.reportCycle(getIdToken());
+            return null;
+        }
+
+        recurseCount++;
+        try {
+
+            return doResolveOid(reporter, resolver);
+        }
+        finally {
+            recurseCount--;
+        }
+    }
+
+    private SmiOidNode doResolveOid(XRefProblemReporter reporter, XRefFallbackResolver resolver) {
         if (m_node == null) {
-            m_node = m_lastOidComponent.resolveNode(getModule(), reporter);
+            m_node = m_lastOidComponent.resolveNode(getModule(), reporter, resolver);
             if (m_node != null) {
                 m_node.getValues().add(this);
             }

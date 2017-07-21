@@ -1,5 +1,6 @@
 package org.jsmiparser.smi;
 
+import org.jsmiparser.phase.xref.XRefFallbackResolver;
 import org.jsmiparser.util.token.IdToken;
 import org.jsmiparser.phase.xref.XRefProblemReporter;
 
@@ -53,14 +54,14 @@ public class ScopedId {
         return m_symbol;
     }
 
-    public void resolveReferences(XRefProblemReporter reporter) {
+    public void resolveReferences(XRefProblemReporter reporter, XRefFallbackResolver resolver) {
         if (m_moduleToken != null) {
             m_module = m_localModule.getMib().resolveModule(m_moduleToken, reporter);
         }
         if (m_module != null) {
-            m_symbol = m_module.resolveReference(m_symbolToken, reporter);
+            m_symbol = m_module.resolveReference(m_symbolToken, reporter, resolver);
         } else {
-            m_symbol = m_localModule.resolveReference(m_symbolToken, reporter);
+            m_symbol = m_localModule.resolveReference(m_symbolToken, reporter, resolver);
         }
     }
 }

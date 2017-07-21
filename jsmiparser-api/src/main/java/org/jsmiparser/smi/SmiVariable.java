@@ -15,6 +15,7 @@
  */
 package org.jsmiparser.smi;
 
+import org.jsmiparser.phase.xref.XRefFallbackResolver;
 import org.jsmiparser.phase.xref.XRefProblemReporter;
 import org.jsmiparser.util.token.IdToken;
 import org.jsmiparser.util.token.QuotedStringToken;
@@ -66,13 +67,32 @@ public class SmiVariable extends SmiObjectType {
     }
 
     public SmiRow getRow() {
-        if (getNode() != null && getNode().getParent() != null) {
-            SmiOidValue oidValue = getNode().getParent().getSingleValue(SmiOidValue.class, getModule());
-            if (oidValue instanceof SmiRow) {
-                return (SmiRow) oidValue;
+        if (getNode() == null || getNode().getParent() == null) {
+            return null;
+        }
+
+        IdToken parentToken = getLastOidComponent().getParentId();
+        if (parentToken == null) {
+            return null;
+        }
+        String parentId = parentToken.getId();
+        SmiModule module = getModule();
+
+        SmiRow result = null;
+        List<SmiOidValue> values = getNode().getParent().getValues();
+        for (SmiOidValue value : values) {
+            // It's possible that there are two items with the same OID
+            // so we need to check for the one that has the same name as what we are looking for.
+            if (value.getModule() == module && value.getId().equals(parentId) && value instanceof SmiRow) {
+                if (result == null) {
+                    result = (SmiRow) value;
+                } else {
+                    throw new IllegalArgumentException("more than one found (" + value + " and " + result + ") : " + module.getIdToken());
+                }
             }
         }
-        return null;
+
+        return result;
     }
 
     public SmiTable getTable() {
@@ -136,9 +156,10 @@ public class SmiVariable extends SmiObjectType {
     public SmiType getBitFieldType() {
         SmiType type = m_type;
         while (type != null) {
-            if (type.getBitFields() != null) {
+            if (type.getNamedNumbers() != null) {
                 return type;
             }
+
             type = type.getBaseType();
         }
         return null;
@@ -148,7 +169,7 @@ public class SmiVariable extends SmiObjectType {
     public List<SmiNamedNumber> getBitFields() {
         SmiType type = getBitFieldType();
         if (type != null) {
-            return type.getBitFields();
+            return type.getNamedNumbers();
         }
         return null;
     }

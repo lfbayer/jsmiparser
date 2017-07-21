@@ -23,6 +23,7 @@ import org.jsmiparser.smi.SmiModule;
 import org.jsmiparser.smi.SmiOidNode;
 import org.jsmiparser.smi.SmiOidValue;
 import org.jsmiparser.smi.SmiSymbol;
+import org.jsmiparser.smi.SmiType;
 import org.jsmiparser.smi.SmiVariable;
 import org.jsmiparser.util.problem.DefaultProblemReporterFactory;
 import org.jsmiparser.util.problem.ProblemEventHandler;
@@ -41,6 +42,7 @@ public class XRefPhase implements Phase {
 
     private XRefProblemReporter m_reporter;
     private Map<String, SymbolDefiner> m_symbolDefinerMap = new LinkedHashMap<String, SymbolDefiner>();
+    private XRefFallbackResolver m_fallbackResolver;
 
     public XRefPhase(XRefProblemReporter reporter) {
         m_reporter = reporter;
@@ -84,15 +86,25 @@ public class XRefPhase implements Phase {
         return this;
     }
 
+    public void setFallbackResolver(XRefFallbackResolver resolver) {
+        m_fallbackResolver = resolver;
+    }
+
     public SmiMib process(SmiMib mib) throws SmiException {
 
         defineMissingSymbols(mib);
+
+        mib.resolveModules(m_reporter);
 
         mib.fillTables();
         mib.defineMissingStandardOids();
 
         for (SmiModule module : mib.getModules()) {
-            module.resolveImports(m_reporter);
+            module.resolveImportModules(m_reporter, m_fallbackResolver);
+        }
+
+        for (SmiModule module : mib.getModules()) {
+            module.resolveImports(m_reporter, m_fallbackResolver);
         }
 
         Collection<SmiModule> modules = mib.getModules();
@@ -117,7 +129,7 @@ public class XRefPhase implements Phase {
     protected void resolveReferences(Collection<SmiModule> modules) {
         for (SmiModule module : modules) {
             for (SmiSymbol symbol : module.getSymbols()) {
-                symbol.resolveReferences(m_reporter);
+                symbol.resolveReferences(m_reporter, m_fallbackResolver);
             }
         }
     }
@@ -126,7 +138,7 @@ public class XRefPhase implements Phase {
         for (SmiModule module : modules) {
             m_log.debug("Resolving oids in module: " + module.getId() + " hash=" + module.getId().hashCode());
             for (SmiOidValue oidValue : module.getOidValues()) {
-                oidValue.resolveOid(m_reporter);
+                oidValue.resolveOid(m_reporter, m_fallbackResolver);
             }
         }
         for (SmiModule module : modules) {
@@ -143,7 +155,7 @@ public class XRefPhase implements Phase {
         for (SmiVariable variable : mib.getVariables()) {
             SmiDefaultValue defaultValue = variable.getDefaultValue();
             if (defaultValue != null) {
-                defaultValue.resolveReferences(m_reporter);
+                defaultValue.resolveReferences(m_reporter, m_fallbackResolver);
             }
         }
     }

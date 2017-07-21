@@ -26,7 +26,7 @@ import java.util.List;
 public class MixedV1V2Test extends TestCase {
 
     public void testToV2() throws MalformedURLException {
-        String[] mibFileNames = { "TOKEN-RING-RMON-MIB", "RFC1271-MIB", "SNMPv2-SMI", "SNMPv2-TC"};
+        String[] mibFileNames = { "TOKEN-RING-RMON-MIB", "RFC1271-MIB", "RFC1155-SMI", "RFC-1212", "RFC1213-MIB", "SNMPv2-SMI", "SNMPv2-TC"};
         ClassLoader cl = Thread.currentThread().getContextClassLoader();
         URL resource = cl.getResource(AbstractMibTestCase.LIBSMI_MIBS_URL + "/ietf");
         assertNotNull(resource);
