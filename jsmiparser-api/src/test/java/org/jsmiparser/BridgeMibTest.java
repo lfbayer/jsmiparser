@@ -15,12 +15,14 @@
  */
 package org.jsmiparser;
 
-import org.jsmiparser.smi.SmiTextualConvention;
-import org.jsmiparser.smi.SmiPrimitiveType;
-import org.jsmiparser.smi.SmiVariable;
-import org.jsmiparser.smi.SmiType;
 import org.jsmiparser.smi.SmiModule;
+import org.jsmiparser.smi.SmiOidMacro;
+import org.jsmiparser.smi.SmiOidNode;
+import org.jsmiparser.smi.SmiPrimitiveType;
 import org.jsmiparser.smi.SmiRange;
+import org.jsmiparser.smi.SmiTextualConvention;
+import org.jsmiparser.smi.SmiType;
+import org.jsmiparser.smi.SmiVariable;
 import org.jsmiparser.smi.SmiVersion;
 
 import java.util.List;
@@ -58,5 +60,12 @@ public class BridgeMibTest extends AbstractMibTestCase {
         assertEquals(4000, dot1dStpBridgeMaxAgeRangeConstraints.get(0).getMaxValue().intValue());
     }
 
-
+    public void testObjectGroup() {
+        SmiOidNode dot1dBaseBridgeGroup = getMib().findByOid(1, 3, 6, 1, 2, 1, 17, 8, 1, 1);
+        assertNotNull(dot1dBaseBridgeGroup);
+        SmiOidMacro macro = (SmiOidMacro) dot1dBaseBridgeGroup.getSingleValue();
+        assertEquals("dot1dBaseBridgeGroup", macro.getId());
+        assertEquals("Bridge level information for this device.", macro.getDescription());
+        assertEquals("dot1dGroups", dot1dBaseBridgeGroup.getParent().getSingleValue().getId());
+    }
 }

@@ -28,17 +28,15 @@ public class SmiNotificationType extends SmiOidMacro implements Notification {
     private List<IdToken> m_objectTokens;
     private List<SmiVariable> m_objects = new ArrayList<SmiVariable>();
     private StatusV2 m_statusV2;
-    private String m_description;
     private String m_reference;
 
     public SmiNotificationType(IdToken idToken, SmiModule module, List<IdToken> objectTokens, StatusV2 statusV2, String description, String reference) {
-        super(idToken, module);
+        super(idToken, module, description);
         m_objectTokens = objectTokens;
         if (m_objectTokens == null) {
             m_objectTokens = Collections.emptyList();
         }
         m_statusV2 = statusV2;
-        m_description = description;
         m_reference = reference;
     }
 
@@ -61,10 +59,6 @@ public class SmiNotificationType extends SmiOidMacro implements Notification {
 
     public StatusV2 getStatusV2() {
         return m_statusV2;
-    }
-
-    public String getDescription() {
-        return m_description;
     }
 
     public String getReference() {

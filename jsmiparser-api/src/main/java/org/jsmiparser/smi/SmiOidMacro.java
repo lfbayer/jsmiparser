@@ -21,9 +21,15 @@ import org.jsmiparser.util.token.IdToken;
 public class SmiOidMacro extends SmiOidValue {
 
     protected StatusAll m_status;
+    private String m_description;
 
     public SmiOidMacro(IdToken idToken, SmiModule module) {
+        this(idToken, module, null);
+    }
+
+    public SmiOidMacro(IdToken idToken, SmiModule module, String description) {
         super(idToken, module);
+        m_description = description;
     }
 
     public StatusAll getStatus() {
@@ -38,4 +44,11 @@ public class SmiOidMacro extends SmiOidValue {
         return m_status.getStatusV2();
     }
 
+    public String getDescription() {
+        return m_description;
+    }
+
+    public void setDescription(String description) {
+        m_description = description;
+    }
 }

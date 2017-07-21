@@ -637,18 +637,15 @@ oid_macro_value_assignment[IdToken idToken] returns [SmiOidMacro v = null]
 :
 	(v=objecttype_macro[idToken]
 	| v=moduleidentity_macro[idToken]
-	| objectidentity_macro
+	| v=objectidentity_macro[idToken]
 	| v=notificationtype_macro[idToken]
-	| objectgroup_macro
-	| notificationgroup_macro
-	| modulecompliance_macro
-	| agentcapabilities_macro)
+	| v=objectgroup_macro[idToken]
+	| v=notificationgroup_macro[idToken]
+	| v=modulecompliance_macro[idToken]
+	| v=agentcapabilities_macro[idToken])
 	ASSIGN_OP lastOidComponent=oid_sequence[idToken]
 	// TODO it's probably better to move the oid stuff into the macro def
 {
-	if (v == null) { // TODO temporary
-		v = m_mp.createOidMacro(idToken);
-	}
 	v.setLastOidComponent(lastOidComponent);
 }
 ;
@@ -834,11 +831,14 @@ moduleidentity_macro_revision[List<SmiModuleRevision> revisions]
 ;
 
 
-objectidentity_macro
+objectidentity_macro[IdToken idToken] returns [SmiOidMacro macro = null]
 :
 	"OBJECT-IDENTITY"
 	"STATUS" status_v2
-	"DESCRIPTION" C_STRING ("REFERENCE" C_STRING)?
+	"DESCRIPTION" description:C_STRING ("REFERENCE" C_STRING)?
+	{
+	    macro = m_mp.createOidMacro(idToken, m_mp.getCStr(description));
+	}
 ;
 
 notificationtype_macro[IdToken idToken] returns [SmiNotificationType nt = null]
@@ -876,37 +876,46 @@ textualconvention_macro[IdToken idToken] returns [SmiTextualConvention tc=null]
 ;
 
 
-objectgroup_macro
+objectgroup_macro[IdToken idToken] returns [SmiOidMacro macro=null]
 :
 	"OBJECT-GROUP" "OBJECTS"
 	L_BRACE
 		LOWER (COMMA LOWER)*
 	R_BRACE 
-	"STATUS" status_v2
-	"DESCRIPTION" C_STRING
+	"STATUS" status:status_v2
+	"DESCRIPTION" description:C_STRING
 	("REFERENCE" C_STRING)?
+	{
+	    macro = m_mp.createOidMacro(idToken, m_mp.getCStr(description));
+	}
 ;
 
 
-notificationgroup_macro
+notificationgroup_macro[IdToken idToken] returns [SmiOidMacro macro=null]
 :
 	"NOTIFICATION-GROUP" "NOTIFICATIONS"
 	L_BRACE
 		LOWER (COMMA LOWER)*
 	R_BRACE 
 	"STATUS" status_v2
-	"DESCRIPTION" C_STRING
+	"DESCRIPTION" description:C_STRING
 	("REFERENCE" C_STRING)?
+	{
+        macro = m_mp.createOidMacro(idToken, m_mp.getCStr(description));
+    }
 ;
 
 
-modulecompliance_macro
+modulecompliance_macro[IdToken idToken] returns [SmiOidMacro macro=null]
 :
 	"MODULE-COMPLIANCE"
 	"STATUS" status_v2
-	"DESCRIPTION" C_STRING
+	"DESCRIPTION" description:C_STRING
 	("REFERENCE" C_STRING)?
 	(modulecompliance_macro_module)+
+	{
+	    macro = m_mp.createOidMacro(idToken, m_mp.getCStr(description));
+	}
 ;
 
 modulecompliance_macro_module
@@ -946,14 +955,17 @@ modulecompliance_access
 ;
 
 
-agentcapabilities_macro
+agentcapabilities_macro[IdToken idToken] returns [SmiOidMacro macro=null]
 :
 	"AGENT-CAPABILITIES"
 	"PRODUCT-RELEASE" C_STRING
 	"STATUS" agentcapabilities_status
-	"DESCRIPTION" C_STRING
+	"DESCRIPTION" description:C_STRING
 	("REFERENCE" C_STRING)?
 	(agentcapabilities_macro_module)*
+	{
+	    macro = m_mp.createOidMacro(idToken, m_mp.getCStr(description));
+	}
 ;
 
 agentcapabilities_status

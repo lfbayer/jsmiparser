@@ -23,16 +23,15 @@ public class SmiModuleIdentity extends SmiOidMacro {
     private final String m_lastUpdated;
     private final String m_organization;
     private final String m_contactInfo;
-    private final String m_description;
+
 
     private final List<SmiModuleRevision> m_revisions;
 
     public SmiModuleIdentity(IdToken id, SmiModule module, String lastUpdated, String organization, String contactInfo, String description, List<SmiModuleRevision> revisions) {
-        super(id, module);
+        super(id, module, description);
         m_lastUpdated = lastUpdated;
         m_organization = organization;
         m_contactInfo = contactInfo;
-        m_description = description;
         m_revisions = revisions;
     }
 
@@ -46,10 +45,6 @@ public class SmiModuleIdentity extends SmiOidMacro {
 
     public String getContactInfo() {
         return m_contactInfo;
-    }
-
-    public String getDescription() {
-        return m_description;
     }
 
     public List<SmiModuleRevision> getRevisions() {

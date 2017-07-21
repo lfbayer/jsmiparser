@@ -24,7 +24,6 @@ public class SmiObjectType extends SmiOidMacro {
     protected SmiType m_type;
     private IdToken m_accessToken;
     private IdToken m_maxAccessToken;
-    private String m_description;
 
     private ObjectTypeAccessV1 m_accessV1;
     private ObjectTypeAccessV2 m_accessV2;
@@ -62,14 +61,6 @@ public class SmiObjectType extends SmiOidMacro {
                 m_accessAll = AccessAll.find(m_maxAccessToken.getId(), false);
             }
         }
-    }
-
-    public String getDescription() {
-        return m_description;
-    }
-
-    public void setDescription(String description) {
-        m_description = description;
     }
 
     public void setStatus(StatusAll status) {

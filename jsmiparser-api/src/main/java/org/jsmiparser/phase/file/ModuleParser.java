@@ -41,6 +41,7 @@ import org.jsmiparser.smi.SmiTrapType;
 import org.jsmiparser.smi.SmiType;
 import org.jsmiparser.smi.SmiVariable;
 import org.jsmiparser.smi.SmiVersion;
+import org.jsmiparser.smi.StatusAll;
 import org.jsmiparser.smi.StatusV2;
 import org.jsmiparser.util.location.Location;
 import org.jsmiparser.util.token.BigIntegerToken;
@@ -157,8 +158,8 @@ public class ModuleParser {
         return new SmiMacro(idToken, m_module);
     }
 
-    public SmiOidMacro createOidMacro(IdToken idToken) {
-        return new SmiOidMacro(idToken, m_module);
+    public SmiOidMacro createOidMacro(IdToken idToken, String description) {
+        return new SmiOidMacro(idToken, m_module, description);
     }
 
     public SmiVariable createVariable(IdToken idToken, SmiType t, Token units, SmiDefaultValue defaultValue) {
